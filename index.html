@@ -2,189 +2,70 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Meeting Room SMM</title>
+<title>Meeting Room Display</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
-body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #111;
-    color: #fff;
-}
-
-.container {
-    display: flex;
-    height: 100vh;
-}
-
-.left {
-    width: 60%;
-    padding: 40px;
-    background: linear-gradient(135deg, #1f1f1f, #2c2c2c);
-}
-
-.right {
-    width: 40%;
-    padding: 40px;
-    background: #000;
-}
-
-.room-name {
-    font-size: 36px;
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-
-.current-meeting {
-    background: #ff9800;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.current-meeting h2 {
-    margin: 0 0 10px 0;
-}
-
-.time {
-    font-size: 48px;
-    text-align: right;
-}
-
-.date {
-    font-size: 18px;
-    text-align: right;
-    opacity: 0.8;
-}
-
-.section {
-    margin-top: 30px;
-}
-
-.section h3 {
-    border-bottom: 1px solid #555;
-    padding-bottom: 5px;
-}
-
-.meeting-item {
-    margin-top: 10px;
-    padding: 10px;
-    background: #222;
-    border-radius: 6px;
-}
+body{margin:0;font-family:Arial;background:#000;color:#fff}
+.container{display:flex;height:100vh}
+.left{width:60%;padding:40px}
+.right{width:40%;padding:40px;text-align:right}
+.room{font-size:36px}
+.status{margin-top:20px;padding:20px;background:orange;border-radius:10px}
+.time{font-size:48px}
 </style>
 </head>
-
 <body>
+
 <div class="container">
-    
-    <!-- KIRI -->
-    <div class="left">
-        <div class="room-name" id="roomName">MEETING ROOM BAWAKARAENG</div>
-
-        <div class="current-meeting" id="currentMeeting">
-            <h2>Sedang Berjalan</h2>
-            <div id="currentTitle">Board Meeting</div>
-            <div id="currentTime">10:30 - 11:30</div>
-        </div>
-
-        <div class="section">
-            <h3>Meeting Berikutnya</h3>
-            <div class="meeting-item" id="nextMeeting">
-                Sales Presentation<br>
-                11:45 - 12:30
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Meeting Selesai</h3>
-            <div class="meeting-item" id="pastMeeting">
-                Weekly Briefing<br>
-                09:00 - 10:00
-            </div>
-        </div>
-    </div>
-
-    <!-- KANAN -->
-    <div class="right">
-        <div class="time" id="clock">12:25</div>
-        <div class="date" id="date">Rabu, 24 April 2024</div>
-    </div>
-
+<div class="left">
+  <div class="room" id="room"></div>
+  <div class="status">
+    <h2 id="status">AVAILABLE</h2>
+    <div id="current"></div>
+  </div>
+  <h3>Meeting Berikutnya</h3>
+  <div id="next"></div>
+  <h3>Meeting Selesai</h3>
+  <div id="past"></div>
+</div>
+<div class="right">
+  <div class="time" id="clock"></div>
+  <div id="date"></div>
+</div>
 </div>
 
 <script>
-// ===============================
-// KONFIGURASI DATA MEETING
-// ===============================
-const roomConfig = {
-    roomName: "Meeting Room Bawakaraeng",
-    meetings: [
-        { title: "Weekly Briefing", start: "09:00", end: "10:00" },
-        { title: "Board Meeting", start: "10:30", end: "11:30" },
-        { title: "Sales Presentation", start: "11:45", end: "12:30" }
-    ]
-};
+const API_URL = "https://docs.google.com/spreadsheets/d/1LPoxRpj2kQiBiIRGhQEwwG6noY1SwMOuycHulxj1BKs/edit?gid=0#gid=0";
+const ROOM_NAME = "Meeting Room A";
+let meetings = [];
 
-// ===============================
-// JAM REALTIME
-// ===============================
-function updateClock() {
-    const now = new Date();
-    document.getElementById("clock").innerText =
-        now.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' });
-
-    document.getElementById("date").innerText =
-        now.toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-    updateMeetings(now);
+async function loadData(){
+  const res = await fetch(`${API_URL}?room=${ROOM_NAME}`);
+  const data = await res.json();
+  meetings = data.meetings;
+  room.innerText = data.roomName;
 }
-setInterval(updateClock, 1000);
-updateClock();
 
-// ===============================
-// LOGIKA MEETING
-// ===============================
-function updateMeetings(now) {
-    const currentTime = now.toTimeString().slice(0,5);
-
-    let current = null;
-    let next = null;
-    let past = [];
-
-    roomConfig.meetings.forEach(m => {
-        if (currentTime >= m.start && currentTime <= m.end) {
-            current = m;
-        } else if (currentTime < m.start && !next) {
-            next = m;
-        } else if (currentTime > m.end) {
-            past.push(m);
-        }
-    });
-
-    document.getElementById("roomName").innerText = roomConfig.roomName;
-
-    if (current) {
-        document.getElementById("currentTitle").innerText = current.title;
-        document.getElementById("currentTime").innerText = `${current.start} - ${current.end}`;
-    } else {
-        document.getElementById("currentTitle").innerText = "Tidak Ada Meeting";
-        document.getElementById("currentTime").innerText = "-";
-    }
-
-    if (next) {
-        document.getElementById("nextMeeting").innerHTML =
-            `${next.title}<br>${next.start} - ${next.end}`;
-    }
-
-    if (past.length > 0) {
-        const last = past[past.length - 1];
-        document.getElementById("pastMeeting").innerHTML =
-            `${last.title}<br>${last.start} - ${last.end}`;
-    }
+function update(){
+  const now=new Date();
+  const t=now.toTimeString().slice(0,5);
+  clock.innerText=t;
+  date.innerText=now.toLocaleDateString("id-ID",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  let cur=null,nxt=null,pst=[];
+  meetings.forEach(m=>{
+    if(t>=m.start&&t<=m.end)cur=m;
+    else if(t<m.start&&!nxt)nxt=m;
+    else if(t>m.end)pst.push(m);
+  });
+  status.innerText=cur?"SEDANG DIGUNAKAN":"AVAILABLE";
+  current.innerText=cur?`${cur.title} (${cur.start}-${cur.end})`:"-";
+  next.innerText=nxt?`${nxt.title} (${nxt.start}-${nxt.end})`:"-";
+  past.innerText=pst.length?pst[pst.length-1].title:"-";
 }
+
+loadData();
+setInterval(update,1000);
 </script>
 
 </body>
 </html>
-
