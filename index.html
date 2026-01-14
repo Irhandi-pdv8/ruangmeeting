@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Meeting Room BAWAKARENG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+    color: #fff;
+}
+
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.left {
+    width: 60%;
+    padding: 40px;
+    background: linear-gradient(135deg, #1f1f1f, #2c2c2c);
+}
+
+.right {
+    width: 40%;
+    padding: 40px;
+    background: #000;
+}
+
+.room-name {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.current-meeting {
+    background: #ff9800;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.current-meeting h2 {
+    margin: 0 0 10px 0;
+}
+
+.time {
+    font-size: 48px;
+    text-align: right;
+}
+
+.date {
+    font-size: 18px;
+    text-align: right;
+    opacity: 0.8;
+}
+
+.section {
+    margin-top: 30px;
+}
+
+.section h3 {
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+}
+
+.meeting-item {
+    margin-top: 10px;
+    padding: 10px;
+    background: #222;
+    border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+    
+    <!-- KIRI -->
+    <div class="left">
+        <div class="room-name" id="roomName">MEETING ROOM BAWAKARAENG</div>
+
+        <div class="current-meeting" id="currentMeeting">
+            <h2>Sedang Berjalan</h2>
+            <div id="currentTitle">Board Meeting</div>
+            <div id="currentTime">10:30 - 11:30</div>
+        </div>
+
+        <div class="section">
+            <h3>Meeting Berikutnya</h3>
+            <div class="meeting-item" id="nextMeeting">
+                Sales Presentation<br>
+                11:45 - 12:30
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Meeting Selesai</h3>
+            <div class="meeting-item" id="pastMeeting">
+                Weekly Briefing<br>
+                09:00 - 10:00
+            </div>
+        </div>
+    </div>
+
+    <!-- KANAN -->
+    <div class="right">
+        <div class="time" id="clock">12:25</div>
+        <div class="date" id="date">Rabu, 24 April 2024</div>
+    </div>
+
+</div>
+
+<script>
+// ===============================
+// KONFIGURASI DATA MEETING
+// ===============================
+const roomConfig = {
+    roomName: "Meeting Room A",
+    meetings: [
+        { title: "Weekly Briefing", start: "09:00", end: "10:00" },
+        { title: "Board Meeting", start: "10:30", end: "11:30" },
+        { title: "Sales Presentation", start: "11:45", end: "12:30" }
+    ]
+};
+
+// ===============================
+// JAM REALTIME
+// ===============================
+function updateClock() {
+    const now = new Date();
+    document.getElementById("clock").innerText =
+        now.toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' });
+
+    document.getElementById("date").innerText =
+        now.toLocaleDateString("id-ID", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    updateMeetings(now);
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===============================
+// LOGIKA MEETING
+// ===============================
+function updateMeetings(now) {
+    const currentTime = now.toTimeString().slice(0,5);
+
+    let current = null;
+    let next = null;
+    let past = [];
+
+    roomConfig.meetings.forEach(m => {
+        if (currentTime >= m.start && currentTime <= m.end) {
+            current = m;
+        } else if (currentTime < m.start && !next) {
+            next = m;
+        } else if (currentTime > m.end) {
+            past.push(m);
+        }
+    });
+
+    document.getElementById("roomName").innerText = roomConfig.roomName;
+
+    if (current) {
+        document.getElementById("currentTitle").innerText = current.title;
+        document.getElementById("currentTime").innerText = `${current.start} - ${current.end}`;
+    } else {
+        document.getElementById("currentTitle").innerText = "Tidak Ada Meeting";
+        document.getElementById("currentTime").innerText = "-";
+    }
+
+    if (next) {
+        document.getElementById("nextMeeting").innerHTML =
+            `${next.title}<br>${next.start} - ${next.end}`;
+    }
+
+    if (past.length > 0) {
+        const last = past[past.length - 1];
+        document.getElementById("pastMeeting").innerHTML =
+            `${last.title}<br>${last.start} - ${last.end}`;
+    }
+}
+</script>
+
+</body>
+</html>
